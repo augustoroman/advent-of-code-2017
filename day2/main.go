@@ -17,16 +17,13 @@ func toi(s string) int {
 	return n
 }
 
-func minmax(s string) (min, max int) {
-	nums := strings.Fields(s)
+func minmax(line string) (min, max int) {
+	nums := lineToNums(line)
 	if len(nums) == 0 {
 		return 0, 0
 	}
-
-	min = toi(nums[0])
-	max = min
-	for _, num := range nums {
-		n := toi(num)
+	min, max = nums[0], nums[0]
+	for _, n := range nums {
 		if n < min {
 			min = n
 		}
@@ -37,19 +34,63 @@ func minmax(s string) (min, max int) {
 	return min, max
 }
 
-func sum(r io.Reader) int {
+func readLines(r io.Reader) []string {
+	var lines []string
 	s := bufio.NewScanner(r)
-	sum := 0
 	for s.Scan() {
-		min, max := minmax(s.Text())
-		sum += max - min
+		line := strings.TrimSpace(s.Text())
+		if len(line) > 0 {
+			lines = append(lines, line)
+		}
 	}
 	if s.Err() != nil {
 		panic(s.Err())
+	}
+	return lines
+}
+
+func sum(lines []string) int {
+	sum := 0
+	for _, line := range lines {
+		min, max := minmax(line)
+		sum += max - min
+	}
+	return sum
+}
+
+func lineToNums(s string) []int {
+	parts := strings.Fields(s)
+	nums := make([]int, len(parts))
+	for i, numstr := range parts {
+		nums[i] = toi(numstr)
+	}
+	return nums
+}
+
+func firstEvenDivisiblesRes(nums []int) (result int) {
+	for i, a := range nums {
+		for j := i + 1; j < len(nums); j++ {
+			b := nums[j]
+			if a > b && a%b == 0 && b != 0 {
+				return a / b
+			} else if a < b && b%a == 0 && a != 0 {
+				return b / a
+			}
+		}
+	}
+	panic(fmt.Errorf("no evenly divisible numbers in %v", nums))
+}
+
+func sum2(lines []string) int {
+	sum := 0
+	for _, line := range lines {
+		sum += firstEvenDivisiblesRes(lineToNums(line))
 	}
 	return sum
 }
 
 func main() {
-	fmt.Println(sum(os.Stdin))
+	lines := readLines(os.Stdin)
+	fmt.Println("sum1:", sum(lines))
+	fmt.Println("sum2:", sum2(lines))
 }
