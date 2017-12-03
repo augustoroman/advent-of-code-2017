@@ -84,10 +84,56 @@ func dist(n int) int {
 	return abs(x) + abs(y)
 }
 
+type walker struct {
+	x, y int
+	n    int
+	r    Ring
+}
+
+func NewWalker() *walker { return &walker{0, 0, 1, 1} }
+
+func (w *walker) Step() {
+	w.n++
+	r := Ring(ring(w.n))
+	if r != w.r {
+		w.x++
+		w.r = r
+		return
+	} else {
+		w.x, w.y = r.walk(w.x, w.y, 1)
+	}
+}
+
+type xy struct{ x, y int }
+type Store map[xy]int
+
+func (s Store) update(x, y int) int {
+	sum := 0
+	for xx := x - 1; xx <= x+1; xx++ {
+		for yy := y - 1; yy <= y+1; yy++ {
+			sum += s[xy{xx, yy}]
+		}
+	}
+	s[xy{x, y}] = sum
+	return sum
+}
+
 func main() {
 	n := flag.Int("n", 0, "val to check")
 	flag.Parse()
 	x, y := pos(*n)
 	d := dist(*n)
 	fmt.Printf("%d -> (%d,%d) -> %d\n", *n, x, y, d)
+
+	w := NewWalker()
+	s := Store{}
+	s[xy{0, 0}] = 1
+	for {
+		w.Step()
+		val := s.update(w.x, w.y)
+		fmt.Printf("Wrote %d to (%d,%d)\n", val, w.x, w.y)
+		if val > *n {
+			break
+		}
+	}
 }
